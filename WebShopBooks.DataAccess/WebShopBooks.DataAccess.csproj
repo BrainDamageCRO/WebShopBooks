@@ -19,4 +19,8 @@
     <ProjectReference Include="..\WebShopBooks.Models\WebShopBooks.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

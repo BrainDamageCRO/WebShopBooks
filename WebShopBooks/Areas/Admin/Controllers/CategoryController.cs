@@ -3,18 +3,11 @@ using WebShopBooks.DataAccess.Data;
 using WebShopBooks.DataAccess.Repository.IRepository;
 using WebShopBooks.Models.Models;
 
-namespace WebShopBooks.Controllers;
+namespace WebShopBooks.Areas.Admin.Controllers;
 
 public class CategoryController : Controller
 {
-    //private readonly ApplicationDbContext _context;
-    //private readonly ICategoryRepository _categoryRepository;
     private readonly IUnitOfWork _unitOfWork;
-    //public CategoryController(ICategoryRepository categoryRepository, ApplicationDbContext context)
-    //{
-    //    _categoryRepository = categoryRepository;
-    //    _context = context;
-    //}
 
     public CategoryController(IUnitOfWork unitOfWork)
     {
@@ -52,7 +45,7 @@ public class CategoryController : Controller
             TempData["success"] = "Category created successfully";
             return RedirectToAction("Index", "Category");
         }
-        
+
         return View();
     }
 
