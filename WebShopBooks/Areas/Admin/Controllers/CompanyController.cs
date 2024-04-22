@@ -7,6 +7,7 @@ using WebShopBooks.Models.ViewModels;
 
 namespace WebShopBooks.Areas.Admin.Controllers;
 
+[Area("Admin")]
 public class CompanyController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
