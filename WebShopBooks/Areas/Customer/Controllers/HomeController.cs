@@ -63,7 +63,6 @@ public class HomeController : Controller
             // If we get here, then we are adding new shoppingCart
             _unitOfWork.ShoppingCart.Add(shoppingCart);
         }
-
         
         _unitOfWork.Save();
 
