@@ -55,10 +55,14 @@ public class Repository<T> : IRepository<T> where T : class
         return query.FirstOrDefault();
     }
 
-    public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter, string? includeProperties = null)
+    public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null, string? includeProperties = null)
     {
         IQueryable<T> query = dbSet;
-        query = query.Where(filter);
+        
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
 
         if (!string.IsNullOrEmpty(includeProperties))
         {
