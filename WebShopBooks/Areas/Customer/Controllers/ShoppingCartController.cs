@@ -38,6 +38,46 @@ public class ShoppingCartController : Controller
         return View(ShoppingCartViewModel);
     }
 
+    public IActionResult Plus(int cartId)
+    {
+        var cartFromDb = _unitOfWork.ShoppingCart.Get(sc => sc.Id == cartId);
+        cartFromDb.Count += 1;
+        
+        _unitOfWork.ShoppingCart.Update(cartFromDb);
+        _unitOfWork.Save();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public IActionResult Minus(int cartId)
+    {
+        var cartFromDb = _unitOfWork.ShoppingCart.Get(sc => sc.Id == cartId);
+        // If we are at 1 or less, then we don't lower count, we remove whole cart for that item
+        if (cartFromDb.Count <= 1)
+        {
+            _unitOfWork.ShoppingCart.Delete(cartFromDb);
+        }
+        else
+        {
+            cartFromDb.Count -= 1;
+            _unitOfWork.ShoppingCart.Update(cartFromDb);
+        }
+        
+        _unitOfWork.Save();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public IActionResult Remove(int cartId)
+    {
+        var cartFromDb = _unitOfWork.ShoppingCart.Get(sc => sc.Id == cartId);
+
+        _unitOfWork.ShoppingCart.Delete(cartFromDb);
+        _unitOfWork.Save();
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
     {
         if (shoppingCart.Count <= 50)
