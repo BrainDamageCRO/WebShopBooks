@@ -38,6 +38,12 @@ public class ShoppingCartController : Controller
         return View(ShoppingCartViewModel);
     }
 
+    public IActionResult Summary()
+    {
+
+        return View();
+    }
+
     public IActionResult Plus(int cartId)
     {
         var cartFromDb = _unitOfWork.ShoppingCart.Get(sc => sc.Id == cartId);
