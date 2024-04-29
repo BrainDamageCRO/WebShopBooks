@@ -46,7 +46,25 @@ public class HomeController : Controller
         
         shoppingCart.ApplicationUserId = userId;
 
-        _unitOfWork.ShoppingCart.Add(shoppingCart);
+        // Logic for not having duplicates
+        ShoppingCart cartFromDb = _unitOfWork.ShoppingCart
+            .Get(sp => sp.ApplicationUserId == userId 
+            && sp.ProductId == shoppingCart.ProductId);
+
+        
+        if (cartFromDb != null)
+        {
+            // If true, shoppingCart already exists
+            cartFromDb.Count += shoppingCart.Count;
+            _unitOfWork.ShoppingCart.Update(cartFromDb);
+        }
+        else
+        {
+            // If we get here, then we are adding new shoppingCart
+            _unitOfWork.ShoppingCart.Add(shoppingCart);
+        }
+
+        
         _unitOfWork.Save();
 
         return RedirectToAction(nameof(Index));
