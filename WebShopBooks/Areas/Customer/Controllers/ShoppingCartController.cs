@@ -26,13 +26,14 @@ public class ShoppingCartController : Controller
 
         ShoppingCartViewModel = new ShoppingCartViewModel()
         {
-            ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(sp => sp.ApplicationUserId == userId, includeProperties: "Product")
+            ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(sp => sp.ApplicationUserId == userId, includeProperties: "Product"),
+            OrderHeader = new OrderHeader()
         };
 
         foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
         {
             cart.Price = GetPriceBasedOnQuantity(cart);
-            ShoppingCartViewModel.OrderTotal += (cart.Price * cart.Count);
+            ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
         }
 
         return View(ShoppingCartViewModel);
@@ -40,8 +41,35 @@ public class ShoppingCartController : Controller
 
     public IActionResult Summary()
     {
+        var claimsIdentity = (ClaimsIdentity)User.Identity;
+        var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-        return View();
+        ShoppingCartViewModel = new ShoppingCartViewModel()
+        {
+            ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(sp => sp.ApplicationUserId == userId, includeProperties: "Product"),
+            OrderHeader = new OrderHeader()
+        };
+
+        var applicationUser = new ApplicationUser();
+
+        applicationUser = _unitOfWork.ApplicationUser.Get(au => au.Id == userId);
+
+        //ShoppingCartViewModel.OrderHeader.ApplicationUser = 
+
+        ShoppingCartViewModel.OrderHeader.Name = applicationUser.Name;
+        ShoppingCartViewModel.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
+        ShoppingCartViewModel.OrderHeader.StreetAddress = applicationUser.StreetAddress;
+        ShoppingCartViewModel.OrderHeader.City = applicationUser.City;
+        ShoppingCartViewModel.OrderHeader.State = applicationUser.State;
+        ShoppingCartViewModel.OrderHeader.PostalCode = applicationUser.PostalCode;
+
+        foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+        {
+            cart.Price = GetPriceBasedOnQuantity(cart);
+            ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+        }
+
+        return View(ShoppingCartViewModel);
     }
 
     public IActionResult Plus(int cartId)
