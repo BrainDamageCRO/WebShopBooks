@@ -4,17 +4,17 @@ using WebShopBooks.Models.Models;
 
 namespace WebShopBooks.DataAccess.Repository;
 
-public class CategoryRepository : Repository<Category>, ICategoryRepository
+public class OrderDetailRepository : Repository<OrderDetail>, IOrderDetailRepository
 {
     private ApplicationDbContext _context;
 
-    public CategoryRepository(ApplicationDbContext context) : base(context)
+    public OrderDetailRepository(ApplicationDbContext context) : base(context)
     {
         _context = context;
     }
 
-    public void Update(Category category)
+    public void Update(OrderDetail orderDetail)
     {
-        _context.Update(category);
+        _context.Update(orderDetail);
     }
 }

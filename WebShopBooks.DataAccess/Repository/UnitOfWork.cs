@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WebShopBooks.DataAccess.Data;
+﻿using WebShopBooks.DataAccess.Data;
 using WebShopBooks.DataAccess.Repository.IRepository;
 
 namespace WebShopBooks.DataAccess.Repository;
@@ -16,6 +11,8 @@ public class UnitOfWork : IUnitOfWork
     public ICompanyRepository Company { get; private set; }
     public IShoppingCartRepository ShoppingCart { get; private set; }
     public IApplicationUserRepository ApplicationUser { get; private set; }
+    public IOrderDetailRepository OrderDetail { get; private set; }
+    public IOrderHeaderRepository OrderHeader { get; private set; }
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -25,6 +22,8 @@ public class UnitOfWork : IUnitOfWork
         Company = new CompanyRepository(_context);
         ShoppingCart = new ShoppingCartRepository(_context);
         ApplicationUser = new ApplicationUserRepository(_context);
+        OrderDetail = new OrderDetailRepository(_context);
+        OrderHeader = new OrderHeaderRepository(_context);
     }
 
     public void Save()
