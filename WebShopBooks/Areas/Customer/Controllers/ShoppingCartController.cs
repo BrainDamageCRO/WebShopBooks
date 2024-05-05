@@ -84,7 +84,8 @@ public class ShoppingCartController : Controller
         ShoppingCartViewModel.OrderHeader.OrderDate = DateTime.Now;
         ShoppingCartViewModel.OrderHeader.ApplicationUserId = userId;
 
-		ShoppingCartViewModel.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser.Get(au => au.Id == userId);
+        // Changed to this because of key constraint
+		ApplicationUser applicationUser = _unitOfWork.ApplicationUser.Get(au => au.Id == userId);
 
         // Removed because we will get all of this data populated in last Summary call
 		//ShoppingCartViewModel.OrderHeader.Name = applicationUser.Name;
@@ -100,7 +101,7 @@ public class ShoppingCartController : Controller
 			ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
 		}
 
-        if (ShoppingCartViewModel.OrderHeader.ApplicationUser.CompanyId.GetValueOrDefault() == 0)
+        if (applicationUser.CompanyId.GetValueOrDefault() == 0)
         {
 			// Customer account
 			ShoppingCartViewModel.OrderHeader.PaymentStatus = PaymentStatus.Pending;
@@ -130,8 +131,19 @@ public class ShoppingCartController : Controller
             _unitOfWork.Save();
         }
 
-        return View(ShoppingCartViewModel);
+		if (applicationUser.CompanyId.GetValueOrDefault() == 0)
+		{
+			// Customer account - make payment
+		}
+
+        // Call OrderConfirmation with the id equal to =>
+		return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartViewModel.OrderHeader.Id });
 	}
+
+    public IActionResult OrderConfirmation(int id)
+    {
+        return View(id);
+    }
 
 	public IActionResult Plus(int cartId)
     {
