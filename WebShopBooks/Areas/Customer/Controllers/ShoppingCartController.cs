@@ -4,6 +4,7 @@ using System.Security.Claims;
 using WebShopBooks.DataAccess.Repository.IRepository;
 using WebShopBooks.Models.Models;
 using WebShopBooks.Models.ViewModels;
+using WebShopBooks.Utility;
 
 namespace WebShopBooks.Areas.Customer.Controllers;
 
@@ -12,6 +13,7 @@ namespace WebShopBooks.Areas.Customer.Controllers;
 public class ShoppingCartController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
+    [BindProperty]
     public ShoppingCartViewModel ShoppingCartViewModel { get; set; }
 
     public ShoppingCartController(IUnitOfWork unitOfWork)
@@ -54,8 +56,6 @@ public class ShoppingCartController : Controller
 
         applicationUser = _unitOfWork.ApplicationUser.Get(au => au.Id == userId);
 
-        //ShoppingCartViewModel.OrderHeader.ApplicationUser = 
-
         ShoppingCartViewModel.OrderHeader.Name = applicationUser.Name;
         ShoppingCartViewModel.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
         ShoppingCartViewModel.OrderHeader.StreetAddress = applicationUser.StreetAddress;
@@ -72,7 +72,68 @@ public class ShoppingCartController : Controller
         return View(ShoppingCartViewModel);
     }
 
-    public IActionResult Plus(int cartId)
+    [HttpPost]
+    [ActionName("Summary")]
+	public IActionResult SummaryPOST()
+	{
+		var claimsIdentity = (ClaimsIdentity)User.Identity;
+		var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+        ShoppingCartViewModel.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(sp => sp.ApplicationUserId == userId, includeProperties: "Product");
+		
+        ShoppingCartViewModel.OrderHeader.OrderDate = DateTime.Now;
+        ShoppingCartViewModel.OrderHeader.ApplicationUserId = userId;
+
+		ShoppingCartViewModel.OrderHeader.ApplicationUser = _unitOfWork.ApplicationUser.Get(au => au.Id == userId);
+
+        // Removed because we will get all of this data populated in last Summary call
+		//ShoppingCartViewModel.OrderHeader.Name = applicationUser.Name;
+		//ShoppingCartViewModel.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
+		//ShoppingCartViewModel.OrderHeader.StreetAddress = applicationUser.StreetAddress;
+		//ShoppingCartViewModel.OrderHeader.City = applicationUser.City;
+		//ShoppingCartViewModel.OrderHeader.State = applicationUser.State;
+		//ShoppingCartViewModel.OrderHeader.PostalCode = applicationUser.PostalCode;
+
+		foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+		{
+			cart.Price = GetPriceBasedOnQuantity(cart);
+			ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+		}
+
+        if (ShoppingCartViewModel.OrderHeader.ApplicationUser.CompanyId.GetValueOrDefault() == 0)
+        {
+			// Customer account
+			ShoppingCartViewModel.OrderHeader.PaymentStatus = PaymentStatus.Pending;
+            ShoppingCartViewModel.OrderHeader.OrderStatus = OrderStatus.Pending;
+		}
+        else
+        {
+			// Company account
+			ShoppingCartViewModel.OrderHeader.PaymentStatus = PaymentStatus.Delayed;
+			ShoppingCartViewModel.OrderHeader.OrderStatus = OrderStatus.Approved;
+		}
+
+        _unitOfWork.OrderHeader.Add(ShoppingCartViewModel.OrderHeader);
+        _unitOfWork.Save();
+
+        foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+        {
+            OrderDetail orderDetail = new()
+            {
+                ProductId = cart.ProductId,
+                OrderHeaderId = ShoppingCartViewModel.OrderHeader.Id,
+                Price = cart.Price,
+                Count = cart.Count,
+            };
+
+            _unitOfWork.OrderDetail.Add(orderDetail);
+            _unitOfWork.Save();
+        }
+
+        return View(ShoppingCartViewModel);
+	}
+
+	public IActionResult Plus(int cartId)
     {
         var cartFromDb = _unitOfWork.ShoppingCart.Get(sc => sc.Id == cartId);
         cartFromDb.Count += 1;
