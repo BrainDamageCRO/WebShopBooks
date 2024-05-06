@@ -180,6 +180,28 @@ public class ShoppingCartController : Controller
 
     public IActionResult OrderConfirmation(int id)
     {
+        // Logic to check whether payment went successfully
+        OrderHeader orderHeader = _unitOfWork.OrderHeader.Get(oh => oh.Id == id, includeProperties: "ApplicationUser");
+
+        // Customer payments (only Company payment can be in Delayed
+        if (orderHeader.PaymentStatus != PaymentStatus.Delayed)
+        {
+            var sessionService = new SessionService();
+            Session session = sessionService.Get(orderHeader.SessionId);
+
+            if (session.PaymentStatus.ToLower() == "paid")
+            {
+                _unitOfWork.OrderHeader.UpdateStripePaymentId(id, session.Id, session.PaymentIntentId);
+                _unitOfWork.OrderHeader.UpdateStatus(id, OrderStatus.Approved, PaymentStatus.Approved);
+                _unitOfWork.Save();
+            }
+        }
+
+        List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCart.GetAll(sc => sc.ApplicationUserId == orderHeader.ApplicationUserId).ToList();
+
+        _unitOfWork.ShoppingCart.DeleteRange(shoppingCarts);
+        _unitOfWork.Save();
+
         return View(id);
     }
 
