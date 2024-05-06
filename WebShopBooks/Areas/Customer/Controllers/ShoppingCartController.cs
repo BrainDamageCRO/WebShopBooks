@@ -5,6 +5,7 @@ using WebShopBooks.DataAccess.Repository.IRepository;
 using WebShopBooks.Models.Models;
 using WebShopBooks.Models.ViewModels;
 using WebShopBooks.Utility;
+using Stripe.Checkout;
 
 namespace WebShopBooks.Areas.Customer.Controllers;
 
@@ -133,8 +134,45 @@ public class ShoppingCartController : Controller
 
 		if (applicationUser.CompanyId.GetValueOrDefault() == 0)
 		{
-			// Customer account - make payment
-		}
+            var domain = "https://localhost:7232/";
+            // Customer account - make payment
+            var options = new SessionCreateOptions
+            {
+                //SuccessUrl = "https://example.com/success",
+                SuccessUrl = domain + $"customer/shoppingcart/OrderConfirmation?id{ShoppingCartViewModel.OrderHeader.Id}",
+                CancelUrl = domain + "customer/cart/index",
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+            };
+
+            foreach (var item in ShoppingCartViewModel.ShoppingCartList) 
+            {
+                var sessionLineItem = new SessionLineItemOptions()
+                {
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        UnitAmount = (long)(item.Price * 100), // 10.10 => 1010
+                        Currency = "eur",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions()
+                        {
+                            Name = item.Product.Title,
+                        }
+                    },
+                    Quantity = item.Count
+                };
+                options.LineItems.Add(sessionLineItem);
+            }
+
+            var service = new SessionService();
+            Session session = service.Create(options);
+
+            _unitOfWork.OrderHeader.UpdateStripePaymentId(ShoppingCartViewModel.OrderHeader.Id, session.Id, session.PaymentIntentId);
+            _unitOfWork.Save();
+
+            Response.Headers.Add("Location", session.Url);
+
+            return new StatusCodeResult(303);
+        }
 
         // Call OrderConfirmation with the id equal to =>
 		return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartViewModel.OrderHeader.Id });
