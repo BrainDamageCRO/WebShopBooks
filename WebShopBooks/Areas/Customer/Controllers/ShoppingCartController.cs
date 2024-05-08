@@ -139,8 +139,8 @@ public class ShoppingCartController : Controller
             var options = new SessionCreateOptions
             {
                 //SuccessUrl = "https://example.com/success",
-                SuccessUrl = domain + $"customer/shoppingcart/OrderConfirmation?id{ShoppingCartViewModel.OrderHeader.Id}",
-                CancelUrl = domain + "customer/cart/index",
+                SuccessUrl = domain + $"customer/shoppingcart/OrderConfirmation?id={ShoppingCartViewModel.OrderHeader.Id}",
+                CancelUrl = domain + "customer/shoppingcart/index",
                 LineItems = new List<SessionLineItemOptions>(),
                 Mode = "payment",
             };
