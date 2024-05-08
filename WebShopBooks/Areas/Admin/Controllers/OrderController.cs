@@ -14,7 +14,7 @@ public class OrderController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
     [BindProperty]
-    private OrderViewModel OrderViewModel { get; set; }
+    public OrderViewModel OrderViewModel { get; set; }
 
     public OrderController(IUnitOfWork unitOfWork)
     {
