@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using WebShopBooks.DataAccess.Repository.IRepository;
 using WebShopBooks.Models.Models;
+using WebShopBooks.Utility;
 
 namespace WebShopBooks.Areas.Admin.Controllers;
 
@@ -23,9 +25,28 @@ public class OrderController : Controller
     #region API Calls
 
     [HttpGet]
-    public IActionResult GetAll()
+    public IActionResult GetAll(string orderStatus)
     {
-        List<OrderHeader> orderHeaderList = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+        IEnumerable<OrderHeader> orderHeaderList = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+
+        switch (orderStatus)
+        {
+            case "pending":
+                orderHeaderList = orderHeaderList.Where(ohl => ohl.PaymentStatus == PaymentStatus.Pending);
+                break;
+            case "inprocess":
+                orderHeaderList = orderHeaderList.Where(ohl => ohl.OrderStatus == OrderStatus.InProcess);
+                break;
+            case "completed":
+                orderHeaderList = orderHeaderList.Where(ohl => ohl.OrderStatus == OrderStatus.Shipped);
+                break;
+            case "approved":
+                orderHeaderList = orderHeaderList.Where(ohl => ohl.OrderStatus == OrderStatus.Approved);
+                break;
+            default:
+                break;
+        }
+
         return Json(new { data = orderHeaderList });
     }
 
