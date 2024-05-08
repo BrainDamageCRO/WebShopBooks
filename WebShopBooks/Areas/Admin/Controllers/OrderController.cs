@@ -5,6 +5,7 @@ using WebShopBooks.Models.Models;
 
 namespace WebShopBooks.Areas.Admin.Controllers;
 
+[Area("Admin")]
 public class OrderController : Controller
 {
     private readonly IUnitOfWork _unitOfWork;
