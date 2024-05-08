@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using WebShopBooks.DataAccess.Repository.IRepository;
 using WebShopBooks.Models.Models;
+using WebShopBooks.Models.ViewModels;
 using WebShopBooks.Utility;
 
 namespace WebShopBooks.Areas.Admin.Controllers;
@@ -20,6 +21,16 @@ public class OrderController : Controller
     public IActionResult Index()
     {
         return View();
+    }
+
+    public IActionResult Details(int orderId)
+    {
+        OrderViewModel orderViewModel = new()
+        {
+            OrderHeader = _unitOfWork.OrderHeader.Get(oh => oh.Id == orderId, includeProperties: "ApplicationUser"),
+            OrderDetail = _unitOfWork.OrderDetail.GetAll(od => od.OrderHeaderId == orderId, includeProperties: "Product")
+        };
+        return View(orderViewModel);
     }
 
     #region API Calls
